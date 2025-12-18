@@ -108,7 +108,6 @@ jobs:
         dotnet publish -c Release ./src/Project.csproj -o ./publish 2>&1 | Tee-Object -FilePath publish-output.txt
 
     - name: Verify JFrog Repositories Exist
-      if: contains(fromJSON('["refs/heads/main"]'), github.ref) && vars.DEPLOY_TO_JFROG == 'true'
       shell: pwsh
       run: |
         Write-Host "Checking if JFrog repository '${{ env.JFROG_REPO_NAME }}' exists..."
@@ -147,14 +146,12 @@ jobs:
         Write-Host "Build timestamp: $TIMESTAMP"
 
     - name: Zip artifact
-      if: contains(fromJSON('["refs/heads/main"]'), github.ref) && vars.DEPLOY_TO_JFROG == 'true'
       shell: pwsh
       run: |
         New-Item -ItemType Directory -Force -Path dist | Out-Null
         Compress-Archive -Path ./publish/* -DestinationPath "dist/${{ env.ZIP_NAME }}" -Force
 
     - name: Upload artifact to JFrog Artifactory
-      if: contains(fromJSON('["refs/heads/main"]'), github.ref) && vars.DEPLOY_TO_JFROG == 'true'
       working-directory: dist
       shell: pwsh
       run: |
@@ -165,7 +162,6 @@ jobs:
         Write-Host "✓ Artifact uploaded to JFrog"
 
     - name: Download published artifact for attestation
-      if: contains(fromJSON('["refs/heads/main"]'), github.ref) && vars.DEPLOY_TO_JFROG == 'true'
       shell: pwsh
       run: |
         $JFROG_ARTIFACT_PATH = "${{ env.JFROG_REPO_NAME }}/${{ env.ZIP_NAME }}"
@@ -186,14 +182,12 @@ jobs:
         echo "ARTIFACT_DIGEST=$DIGEST" >> $env:GITHUB_ENV
 
     - name: Attest artifact with GitHub
-      if: contains(fromJSON('["refs/heads/main"]'), github.ref) && vars.DEPLOY_TO_JFROG == 'true'
       id: attest
       uses: actions/attest-build-provenance@v3
       with:
         subject-path: '${{ env.ZIP_NAME }}'
 
     - name: Create custom attestation with actor info
-      if: contains(fromJSON('["refs/heads/main"]'), github.ref) && vars.DEPLOY_TO_JFROG == 'true'
       id: attest-actor
       uses: actions/attest@v2
       with:
@@ -216,7 +210,6 @@ jobs:
           }
 
     - name: Add attestation metadata to JFrog artifact
-      if: contains(fromJSON('["refs/heads/main"]'), github.ref) && vars.DEPLOY_TO_JFROG == 'true'
       shell: pwsh
       run: |
         $ARTIFACT_PATH = "${{ env.JFROG_REPO_NAME }}/${{ env.ZIP_NAME }}"
@@ -230,14 +223,12 @@ jobs:
         Write-Host "  Git SHA: ${{ env.SHORT_SHA }}"
         Write-Host "  Build: ${{ env.ARTIFACT_NAME }}/${{ github.run_number }}"
 
-    - name: Collect build environment
-      if: contains(fromJSON('["refs/heads/main"]'), github.ref) && vars.DEPLOY_TO_JFROG == 'true'
+    - name: Collect build environment 
       run: |
         jf rt build-collect-env ${{ env.ARTIFACT_NAME }} ${{ github.run_number }}
         jf rt build-add-git ${{ env.ARTIFACT_NAME }} ${{ github.run_number }}
 
     - name: Publish build-info to JFrog
-      if: contains(fromJSON('["refs/heads/main"]'), github.ref) && vars.DEPLOY_TO_JFROG == 'true'
       run: |
         jf rt build-publish ${{ env.ARTIFACT_NAME }} ${{ github.run_number }}
         Write-Host "✓ Build info published to JFrog"
