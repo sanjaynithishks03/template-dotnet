@@ -32,7 +32,13 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
       with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}       
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v4
+      with:
+        languages: csharp
+        queries: security-and-quality
 
     - name: Setup artifact file name and jfrog repo name
       id: setup-build-env
@@ -222,12 +228,6 @@ jobs:
         Write-Host "  Artifact: $ARTIFACT_PATH"
         Write-Host "  Git SHA: ${{ env.SHORT_SHA }}"
         Write-Host "  Build: ${{ env.ARTIFACT_NAME }}/${{ github.run_number }}"
-
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v4
-      with:
-        languages: csharp
-        queries: security-and-quality
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
