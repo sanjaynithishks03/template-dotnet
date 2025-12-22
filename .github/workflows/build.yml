@@ -275,6 +275,7 @@ jobs:
           }
 
     - name: Upload CodeQL SARIF to JFrog
+      shell: bash
       run: |
         cp "${{ env.SARIF_FILE }}" "${{ env.SARIF_JFROG_NAME }}"
         
@@ -286,6 +287,7 @@ jobs:
         echo "✓ CodeQL SARIF uploaded to JFrog security repository"
 
     - name: Add CodeQL attestation metadata to SARIF in JFrog
+      shell: bash
       run: |
         SARIF_ARTIFACT_PATH="${{ env.JFROG_SECURITY_REPO_NAME }}/${{ env.SARIF_JFROG_NAME }}"
         
@@ -296,6 +298,7 @@ jobs:
         echo "✓ SARIF file location: ${SARIF_ARTIFACT_PATH}"
 
     - name: Link package to SARIF security artifact
+      shell: bash
       run: |
         # Add bidirectional link from package to its SARIF file
         ARTIFACT_PATH="${{ env.JFROG_REPO_NAME }}/${{ env.ARTIFACT_NAME }}"
@@ -309,6 +312,7 @@ jobs:
 
     - name: Generate SBOM
       id: generate-sbom
+      shell: bash
       run: |
         SBOM_JFROG_NAME="${{ env.BUILD_NAME }}-sbom-${{ github.run_number }}.json"
         
@@ -345,6 +349,7 @@ jobs:
           }
 
     - name: Upload SBOM to JFrog
+      shell: bash
       run: |
         jf rt upload "${{ env.SBOM_JFROG_NAME }}" "${{ env.JFROG_SECURITY_REPO_NAME }}/" \
           --build-name=${{ env.BUILD_NAME }} \
@@ -354,6 +359,7 @@ jobs:
         echo "✓ SBOM uploaded to JFrog security repository"
 
     - name: Add SBOM attestation metadata to JFrog
+      shell: bash
       run: |
         SBOM_ARTIFACT_PATH="${{ env.JFROG_SECURITY_REPO_NAME }}/${{ env.SBOM_JFROG_NAME }}"
         
@@ -364,6 +370,7 @@ jobs:
         echo "✓ SBOM file location: ${SBOM_ARTIFACT_PATH}"
 
     - name: Link package to SBOM security artifact
+      shell: bash
       run: |
         # Add bidirectional link from package to its SBOM file
         ARTIFACT_PATH="${{ env.JFROG_REPO_NAME }}/${{ env.ARTIFACT_NAME }}"
