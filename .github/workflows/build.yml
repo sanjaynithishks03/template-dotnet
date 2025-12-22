@@ -238,6 +238,7 @@ jobs:
 
     - name: Find CodeQL SARIF results
       id: sarif-info
+      shell: bash
       run: |
         SARIF_FILE=$(find codeql-results -name "*.sarif" -type f | head -n 1)
         if [ -z "$SARIF_FILE" ]; then
