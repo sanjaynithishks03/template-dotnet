@@ -262,7 +262,7 @@ jobs:
         predicate: |
           {
             "scanType": "codeql",
-            "language": "javascript",
+            "language": "csharp",
             "queries": "security-and-quality",
             "repository": "${{ github.repository }}",
             "commit": "${{ github.sha }}",
@@ -317,7 +317,7 @@ jobs:
         SBOM_JFROG_NAME="${{ env.ARTIFACT_NAME }}-sbom-${{ github.run_number }}.json"
         
         echo "Generating SBOM in CycloneDX format..."
-        jf npm sbom --sbom-format=cyclonedx > "$SBOM_JFROG_NAME"
+        jf mvn sbom --sbom-format=cyclonedx > "$SBOM_JFROG_NAME"
         
         echo "SBOM_JFROG_NAME=$SBOM_JFROG_NAME" >> $GITHUB_ENV
         echo "✓ SBOM generated: $SBOM_JFROG_NAME"
