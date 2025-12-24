@@ -396,7 +396,7 @@ jobs:
       shell: bash
       run: |
         # Add bidirectional link from package to its SBOM file
-        ARTIFACT_PATH="${{ env.JFROG_REPO_NAME }}/${{ env.ARTIFACT_NAME }}"
+        ARTIFACT_PATH="${{ env.JFROG_REPO_NAME }}/${{ env.ZIP_NAME }}"
         
         jf rt set-props "${ARTIFACT_PATH}" \
           "security.sbom.file=${{ env.SBOM_JFROG_NAME }}.json;security.sbom.path=${{ env.JFROG_SECURITY_REPO_NAME }}/${{ env.SBOM_JFROG_NAME }}.json;security.sbom.format=cyclonedx;security.sbom.attestation=${{ steps.attest-sbom.outputs.bundle-path }}"
