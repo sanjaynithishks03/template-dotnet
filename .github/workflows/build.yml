@@ -195,7 +195,7 @@ jobs:
 
     - name: Create custom attestation with actor info
       id: attest-actor
-      uses: actions/attest@v2
+      uses: actions/attest@v3
       with:
         subject-path: '${{ env.ZIP_NAME }}'
         predicate-type: 'https://github.com/attestation/actor/v1'
@@ -255,7 +255,7 @@ jobs:
 
     - name: Attest CodeQL SARIF results
       id: attest-codeql
-      uses: actions/attest@v2
+      uses: actions/attest@v3
       with:
         subject-path: '${{ env.SARIF_FILE }}'
         predicate-type: 'https://github.com/attestation/codeql/v1'
@@ -353,7 +353,7 @@ jobs:
 
     - name: Attest SBOM
       id: attest-sbom
-      uses: actions/attest@v2
+      uses: actions/attest@v3
       with:
         subject-path: '${{ env.SBOM_JFROG_NAME }}.json'
         predicate-type: 'https://cyclonedx.org/bom'
@@ -541,7 +541,7 @@ jobs:
 
     - name: Create initial promotion attestation
       id: attest-promotion
-      uses: actions/attest@v2
+      uses: actions/attest@v3
       with:
         subject-name: "${{ env.ARTIFACT_NAME }}/${{ env.BUNDLE_VERSION }} - BUILD -> DEV"
         subject-digest: "sha256:${{ steps.bundle-digest.outputs.bundle_digest }}"
