@@ -249,7 +249,7 @@ jobs:
         echo "Found SARIF file: $SARIF_FILE"
         
         # Generate SARIF filename for JFrog (using build number for uniqueness)
-        SARIF_JFROG_NAME="${{ env.BUILD_NAME }}-codeql-${{ github.run_number }}.sarif"
+        SARIF_JFROG_NAME="${{ env.ARTIFACT_NAME }}-codeql-${{ github.run_number }}.sarif"
         echo "SARIF_JFROG_NAME=$SARIF_JFROG_NAME" >> $GITHUB_ENV
         echo "JFrog SARIF name: $SARIF_JFROG_NAME"
 
@@ -280,9 +280,9 @@ jobs:
         cp "${{ env.SARIF_FILE }}" "${{ env.SARIF_JFROG_NAME }}"
         
         jf rt upload "${{ env.SARIF_JFROG_NAME }}" "${{ env.JFROG_SECURITY_REPO_NAME }}/" \
-          --build-name=${{ env.BUILD_NAME }} \
+          --build-name=${{ env.ARTIFACT_NAME }} \
           --build-number=${{ github.run_number }} \
-          --module=${{ env.BUILD_NAME }}-security
+          --module=${{ env.ARTIFACT_NAME }}-security
         
         echo "✓ CodeQL SARIF uploaded to JFrog security repository"
 
@@ -292,7 +292,7 @@ jobs:
         SARIF_ARTIFACT_PATH="${{ env.JFROG_SECURITY_REPO_NAME }}/${{ env.SARIF_JFROG_NAME }}"
         
         jf rt set-props "${SARIF_ARTIFACT_PATH}" \
-          "git.commit.sha=${{ github.sha }};git.commit.short=${{ env.SHORT_SHA }};git.branch=${{ github.ref_name }};build.name=${{ env.BUILD_NAME }};build.number=${{ github.run_number }};scan.type=codeql;scan.language=csharp;attestation.codeql.bundle=${{ steps.attest-codeql.outputs.bundle-path }};attestation.github.url=https://github.com/${{ github.repository }}/attestations;attestation.commit=${{ github.sha }};attestation.sigstore.enabled=true;related.artifact=${{ env.ZIP_NAME }};related.package.repo=${{ env.JFROG_REPO_NAME }}"
+          "git.commit.sha=${{ github.sha }};git.commit.short=${{ env.SHORT_SHA }};git.branch=${{ github.ref_name }};build.name=${{ env.ARTIFACT_NAME }};build.number=${{ github.run_number }};scan.type=codeql;scan.language=csharp;attestation.codeql.bundle=${{ steps.attest-codeql.outputs.bundle-path }};attestation.github.url=https://github.com/${{ github.repository }}/attestations;attestation.commit=${{ github.sha }};attestation.sigstore.enabled=true;related.artifact=${{ env.ZIP_NAME }};related.package.repo=${{ env.JFROG_REPO_NAME }}"
         
         echo "✓ CodeQL attestation metadata added to SARIF in JFrog"
         echo "✓ SARIF file location: ${SARIF_ARTIFACT_PATH}"
@@ -314,7 +314,7 @@ jobs:
       id: generate-sbom
       shell: bash
       run: |
-        SBOM_JFROG_NAME="${{ env.BUILD_NAME }}-sbom-${{ github.run_number }}.json"
+        SBOM_JFROG_NAME="${{ env.ARTIFACT_NAME }}-sbom-${{ github.run_number }}.json"
         
         echo "Generating SBOM in CycloneDX format..."
         jf npm sbom --sbom-format=cyclonedx > "$SBOM_JFROG_NAME"
@@ -352,9 +352,9 @@ jobs:
       shell: bash
       run: |
         jf rt upload "${{ env.SBOM_JFROG_NAME }}" "${{ env.JFROG_SECURITY_REPO_NAME }}/" \
-          --build-name=${{ env.BUILD_NAME }} \
+          --build-name=${{ env.ARTIFACT_NAME }} \
           --build-number=${{ github.run_number }} \
-          --module=${{ env.BUILD_NAME }}-security
+          --module=${{ env.ARTIFACT_NAME }}-security
         
         echo "✓ SBOM uploaded to JFrog security repository"
 
@@ -364,7 +364,7 @@ jobs:
         SBOM_ARTIFACT_PATH="${{ env.JFROG_SECURITY_REPO_NAME }}/${{ env.SBOM_JFROG_NAME }}"
         
         jf rt set-props "${SBOM_ARTIFACT_PATH}" \
-          "git.commit.sha=${{ github.sha }};git.commit.short=${{ env.SHORT_SHA }};git.branch=${{ github.ref_name }};build.name=${{ env.BUILD_NAME }};build.number=${{ github.run_number }};sbom.format=cyclonedx;sbom.type=software-bill-of-materials;attestation.sbom.bundle=${{ steps.attest-sbom.outputs.bundle-path }};attestation.github.url=https://github.com/${{ github.repository }}/attestations;attestation.commit=${{ github.sha }};attestation.sigstore.enabled=true;related.artifact=${{ env.ZIP_NAME }};related.package.repo=${{ env.JFROG_REPO_NAME }}"
+          "git.commit.sha=${{ github.sha }};git.commit.short=${{ env.SHORT_SHA }};git.branch=${{ github.ref_name }};build.name=${{ env.ARTIFACT_NAME }};build.number=${{ github.run_number }};sbom.format=cyclonedx;sbom.type=software-bill-of-materials;attestation.sbom.bundle=${{ steps.attest-sbom.outputs.bundle-path }};attestation.github.url=https://github.com/${{ github.repository }}/attestations;attestation.commit=${{ github.sha }};attestation.sigstore.enabled=true;related.artifact=${{ env.ZIP_NAME }};related.package.repo=${{ env.JFROG_REPO_NAME }}"
         
         echo "✓ SBOM attestation metadata added to JFrog"
         echo "✓ SBOM file location: ${SBOM_ARTIFACT_PATH}"
