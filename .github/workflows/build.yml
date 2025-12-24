@@ -310,23 +310,65 @@ jobs:
         echo "✓ Package: ${ARTIFACT_PATH}"
         echo "✓ SARIF: ${{ env.JFROG_SECURITY_REPO_NAME }}/${{ env.SARIF_JFROG_NAME }}"
 
-    - name: Generate SBOM
+    # - name: Generate SBOM
+    #   id: generate-sbom
+    #   shell: bash
+    #   run: |
+    #     SBOM_JFROG_NAME="${{ env.ARTIFACT_NAME }}-sbom-${{ github.run_number }}.json"
+        
+    #     echo "Generating SBOM in CycloneDX format..."
+    #     jf dotnet sbom --sbom-format=cyclonedx > "$SBOM_JFROG_NAME"
+        
+    #     echo "SBOM_JFROG_NAME=$SBOM_JFROG_NAME" >> $GITHUB_ENV
+    #     echo "✓ SBOM generated: $SBOM_JFROG_NAME"
+        
+    #     # Display SBOM summary
+    #     if command -v jq &> /dev/null; then
+    #       COMPONENT_COUNT=$(jq '.components | length' "$SBOM_JFROG_NAME" 2>/dev/null || echo "unknown")
+    #       echo "  Components: $COMPONENT_COUNT"
+    #     fi
+
+    - name: Generate SBOM (JFrog/Xray from build-info)
       id: generate-sbom
-      shell: bash
+      shell: pwsh
       run: |
-        SBOM_JFROG_NAME="${{ env.ARTIFACT_NAME }}-sbom-${{ github.run_number }}.json"
-        
-        echo "Generating SBOM in CycloneDX format..."
-        jf dotnet sbom --sbom-format=cyclonedx > "$SBOM_JFROG_NAME"
-        
-        echo "SBOM_JFROG_NAME=$SBOM_JFROG_NAME" >> $GITHUB_ENV
-        echo "✓ SBOM generated: $SBOM_JFROG_NAME"
-        
-        # Display SBOM summary
-        if command -v jq &> /dev/null; then
-          COMPONENT_COUNT=$(jq '.components | length' "$SBOM_JFROG_NAME" 2>/dev/null || echo "unknown")
-          echo "  Components: $COMPONENT_COUNT"
-        fi
+        $ErrorActionPreference = "Stop"
+
+        # Use the build name/number you already publish
+        $buildName   = "${{ env.ARTIFACT_NAME }}"
+        $buildNumber = "${{ github.run_number }}"
+
+        $sbomName = "${{ env.ARTIFACT_NAME }}-sbom-${{ github.run_number }}.json"
+        echo "SBOM_JFROG_NAME=$sbomName" >> $env:GITHUB_ENV
+
+        Write-Host "Requesting SBOM from JFrog/Xray for build: $buildName/$buildNumber"
+
+        # NOTE:
+        # The exact endpoint can differ by JFrog version/setup.
+        # The most common pattern is an Xray SBOM API that accepts build details.
+        # If this fails with 404, your platform team needs to confirm the SBOM REST endpoint enabled in your JFrog/Xray.
+        $resp = jf rt curl `
+          -XPOST `
+          -H "Content-Type: application/json" `
+          "/xray/api/v1/sbom/export" `
+          --silent --fail `
+          -d @"
+        {
+          "format": "cyclonedx",
+          "type": "build",
+          "build": {
+            "name": "$buildName",
+            "number": "$buildNumber"
+          }
+        }
+        "@
+
+        if ([string]::IsNullOrWhiteSpace($resp)) {
+          throw "SBOM API returned empty response"
+        }
+
+        $resp | Out-File -FilePath $sbomName -Encoding utf8
+        Write-Host "✓ SBOM saved to: $sbomName"
 
     - name: Attest SBOM
       id: attest-sbom
