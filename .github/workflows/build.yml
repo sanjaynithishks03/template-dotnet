@@ -27,7 +27,7 @@ jobs:
       jfrog_repo_name: ${{ steps.setup-build-env.outputs.jfrog_repo_name }}
       jfrog_security_repo_name: ${{ steps.setup-build-env.outputs.jfrog_security_repo_name }}
     steps:     
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
    
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
@@ -422,7 +422,7 @@ jobs:
     environment: DEV
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Setup JFrog CLI
       uses: jfrog/setup-jfrog-cli@v4

@@ -41,7 +41,7 @@ jobs:
     environment: ${{ inputs.target_env }}
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Setup JFrog CLI
       uses: jfrog/setup-jfrog-cli@v4
