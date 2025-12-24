@@ -339,13 +339,14 @@ jobs:
       shell: pwsh
       run: |
         $ErrorActionPreference = "Stop"
-        $sbomName = "${{ env.ARTIFACT_NAME }}-sbom-${{ github.run_number }}.json"
+        $sbomName = "${{ env.ARTIFACT_NAME }}-sbom-${{ github.run_number }}"
         echo "SBOM_JFROG_NAME=$sbomName" >> $env:GITHUB_ENV
-
         dotnet-CycloneDX `
           --json `
           --output "$sbomName" `
           ".\src\Project.csproj"
+        
+        mv "$sbomName/bom.json" "$sbomName.json"
 
         if (!(Test-Path $sbomName)) { throw "SBOM not created: $sbomName" }
         Write-Host "✓ SBOM generated: $sbomName"
@@ -354,7 +355,7 @@ jobs:
       id: attest-sbom
       uses: actions/attest@v2
       with:
-        subject-path: '${{ env.SBOM_JFROG_NAME }}'
+        subject-path: '${{ env.SBOM_JFROG_NAME }}.json'
         predicate-type: 'https://cyclonedx.org/bom'
         predicate: |
           {
