@@ -328,47 +328,31 @@ jobs:
     #       echo "  Components: $COMPONENT_COUNT"
     #     fi
 
-    - name: Generate SBOM (JFrog/Xray from build-info)
+    - name: Install CycloneDX .NET tool
+      shell: pwsh
+      run: |
+        dotnet tool update --global CycloneDX || dotnet tool install --global CycloneDX
+        echo "$env:USERPROFILE\.dotnet\tools" >> $env:GITHUB_PATH
+        cyclonedx --version
+
+    - name: Generate SBOM (CycloneDX JSON)
       id: generate-sbom
       shell: pwsh
       run: |
         $ErrorActionPreference = "Stop"
 
-        # Use the build name/number you already publish
-        $buildName   = "${{ env.ARTIFACT_NAME }}"
-        $buildNumber = "${{ github.run_number }}"
-
         $sbomName = "${{ env.ARTIFACT_NAME }}-sbom-${{ github.run_number }}.json"
         echo "SBOM_JFROG_NAME=$sbomName" >> $env:GITHUB_ENV
 
-        Write-Host "Requesting SBOM from JFrog/Xray for build: $buildName/$buildNumber"
+        # Generate SBOM from the csproj
+        cyclonedx `
+          --json `
+          --output "$sbomName" `
+          ".\src\Project.csproj"
 
-        # NOTE:
-        # The exact endpoint can differ by JFrog version/setup.
-        # The most common pattern is an Xray SBOM API that accepts build details.
-        # If this fails with 404, your platform team needs to confirm the SBOM REST endpoint enabled in your JFrog/Xray.
-        $resp = jf rt curl `
-          -XPOST `
-          -H "Content-Type: application/json" `
-          "/xray/api/v1/sbom/export" `
-          --silent --fail `
-          -d @"
-        {
-          "format": "cyclonedx",
-          "type": "build",
-          "build": {
-            "name": "$buildName",
-            "number": "$buildNumber"
-          }
-        }
-        "@
+        if (!(Test-Path $sbomName)) { throw "SBOM not created: $sbomName" }
 
-        if ([string]::IsNullOrWhiteSpace($resp)) {
-          throw "SBOM API returned empty response"
-        }
-
-        $resp | Out-File -FilePath $sbomName -Encoding utf8
-        Write-Host "✓ SBOM saved to: $sbomName"
+        Write-Host "✓ SBOM generated: $sbomName"
 
     - name: Attest SBOM
       id: attest-sbom
