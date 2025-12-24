@@ -374,7 +374,7 @@ jobs:
     - name: Upload SBOM to JFrog
       shell: bash
       run: |
-        jf rt upload "${{ env.SBOM_JFROG_NAME }}" "${{ env.JFROG_SECURITY_REPO_NAME }}/" \
+        jf rt upload "${{ env.SBOM_JFROG_NAME }}.json" "${{ env.JFROG_SECURITY_REPO_NAME }}/" \
           --build-name=${{ env.ARTIFACT_NAME }} \
           --build-number=${{ github.run_number }} \
           --module=${{ env.ARTIFACT_NAME }}-security
@@ -384,7 +384,7 @@ jobs:
     - name: Add SBOM attestation metadata to JFrog
       shell: bash
       run: |
-        SBOM_ARTIFACT_PATH="${{ env.JFROG_SECURITY_REPO_NAME }}/${{ env.SBOM_JFROG_NAME }}"
+        SBOM_ARTIFACT_PATH="${{ env.JFROG_SECURITY_REPO_NAME }}/${{ env.SBOM_JFROG_NAME }}.json"
         
         jf rt set-props "${SBOM_ARTIFACT_PATH}" \
           "git.commit.sha=${{ github.sha }};git.commit.short=${{ env.SHORT_SHA }};git.branch=${{ github.ref_name }};build.name=${{ env.ARTIFACT_NAME }};build.number=${{ github.run_number }};sbom.format=cyclonedx;sbom.type=software-bill-of-materials;attestation.sbom.bundle=${{ steps.attest-sbom.outputs.bundle-path }};attestation.github.url=https://github.com/${{ github.repository }}/attestations;attestation.commit=${{ github.sha }};attestation.sigstore.enabled=true;related.artifact=${{ env.ZIP_NAME }};related.package.repo=${{ env.JFROG_REPO_NAME }}"
@@ -399,12 +399,11 @@ jobs:
         ARTIFACT_PATH="${{ env.JFROG_REPO_NAME }}/${{ env.ARTIFACT_NAME }}"
         
         jf rt set-props "${ARTIFACT_PATH}" \
-          "security.sbom.file=${{ env.SBOM_JFROG_NAME }};security.sbom.path=${{ env.JFROG_SECURITY_REPO_NAME }}/${{ env.SBOM_JFROG_NAME }};security.sbom.format=cyclonedx;security.sbom.attestation=${{ steps.attest-sbom.outputs.bundle-path }}"
+          "security.sbom.file=${{ env.SBOM_JFROG_NAME }}.json;security.sbom.path=${{ env.JFROG_SECURITY_REPO_NAME }}/${{ env.SBOM_JFROG_NAME }}.json;security.sbom.format=cyclonedx;security.sbom.attestation=${{ steps.attest-sbom.outputs.bundle-path }}"
         
         echo "✓ Package linked to SBOM security artifact"
         echo "✓ Package: ${ARTIFACT_PATH}"
-        echo "✓ SBOM: ${{ env.JFROG_SECURITY_REPO_NAME }}/${{ env.SBOM_JFROG_NAME }}"
-
+        echo "✓ SBOM: ${{ env.JFROG_SECURITY_REPO_NAME }}/${{ env.SBOM_JFROG_NAME }}.json"
     - name: Collect build environment 
       run: |
         jf rt build-collect-env ${{ env.ARTIFACT_NAME }} ${{ github.run_number }}
