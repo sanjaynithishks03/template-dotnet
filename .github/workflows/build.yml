@@ -333,25 +333,21 @@ jobs:
       run: |
         dotnet tool update --global CycloneDX || dotnet tool install --global CycloneDX
         echo "$env:USERPROFILE\.dotnet\tools" >> $env:GITHUB_PATH
-        cyclonedx --version
+        dotnet-CycloneDX --version
 
     - name: Generate SBOM (CycloneDX JSON)
-      id: generate-sbom
       shell: pwsh
       run: |
         $ErrorActionPreference = "Stop"
-
         $sbomName = "${{ env.ARTIFACT_NAME }}-sbom-${{ github.run_number }}.json"
         echo "SBOM_JFROG_NAME=$sbomName" >> $env:GITHUB_ENV
 
-        # Generate SBOM from the csproj
-        cyclonedx `
+        dotnet-CycloneDX `
           --json `
           --output "$sbomName" `
           ".\src\Project.csproj"
 
         if (!(Test-Path $sbomName)) { throw "SBOM not created: $sbomName" }
-
         Write-Host "✓ SBOM generated: $sbomName"
 
     - name: Attest SBOM
